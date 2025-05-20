@@ -39,8 +39,7 @@ void main() {
     runApp(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(
-              create: (context) => SocketProvider()..connect()),
+          ChangeNotifierProvider(create: (context) => SocketProvider()),
           ChangeNotifierProvider(create: (context) => DialogProvider()),
         ],
         child: MyApp(),
@@ -82,7 +81,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _socketProvider = Provider.of<SocketProvider>(context, listen: false);
-
+    _socketProvider.connect(context);
     _socketProvider.onShowReconnectDialog = () {
       if (getCurrentRoute() != "/LoginView") {
         showDialog(
@@ -303,7 +302,7 @@ class _MainScreenState extends State<MainScreen> {
     print("🔹 Ruta actual: $currentRoute");
     print("🔹 Intentando navegar a: $routeToGo");
 
-    if (currentRoute == routeToGo) {
+    if (currentRoute == routeToGo || _socketProvider.isInMenuConfig) {
       print("⚠️ Ya estamos en $routeToGo, no navegamos de nuevo.");
       return;
     }
@@ -381,6 +380,10 @@ class _MainScreenState extends State<MainScreen> {
         );
       },
     );
+  }
+
+  conectarSocketProvider() {
+    _socketProvider.connect(context);
   }
 
   @override

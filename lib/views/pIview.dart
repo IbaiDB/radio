@@ -327,6 +327,7 @@ class PiviewState extends State<Piview> {
         }
       });
       socketProvider.sendMessage(resultado);
+      
     } else {
       return '';
     }
