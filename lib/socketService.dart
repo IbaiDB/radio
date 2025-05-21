@@ -29,7 +29,7 @@ class SocketProvider with ChangeNotifier {
 
   Future<String?> getIp() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('server_ip');
+    return prefs.getString('server_ip');  
   }
 
   Future<void> cleanIp() async {
@@ -74,8 +74,27 @@ class SocketProvider with ChangeNotifier {
         cancelOnError: true,
       );
     } on SocketException catch (e) {
-      print('🚨 Error de conexión: $e');
-      _handleDisconnection(context, true);
+      if (e.message.contains('No route to host')) {
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Error de conexión'),
+              content: Text('No se pudo conectar. La IP puede ser incorrecta.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Cerrar'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      } else {
+        print('🚨 Error de conexión: $e');
+        _handleDisconnection(context, true);
+      }
     } on TimeoutException {
       print('⏳ Conexión agotada.');
       _handleDisconnection(context, true);
@@ -110,13 +129,13 @@ class SocketProvider with ChangeNotifier {
     disconnect();
 
     final ip = await getIp();
-    if (dialog && ip != null) onShowReconnectDialog?.call();
+    if (dialog && ip != null && !isInMenuConfig) onShowReconnectDialog?.call();
     print("🕒 Esperando $_retryDelay segundos antes de reconectar...");
 
     Timer(Duration(seconds: _retryDelay), () {
       connect(context);
       if (dialog) onHideReconnectDialog?.call();
-      _retryDelay = (_retryDelay * 2).clamp(1, 60); // Aumenta hasta 60s
+      _retryDelay = (_retryDelay * 2).clamp(1, 60);
     });
   }
 

@@ -67,8 +67,10 @@ class MenuconfigState extends State<Menuconfig> {
       setState(() {
         srvController.text = resultado;
       });
+      socketProvider.disconnect();
+      socketProvider.cleanIp();
       await saveIp(resultado.trim());
-      socketProvider.connect(context);
+      //socketProvider.connect(context);
     } else {
       return '';
     }
@@ -99,9 +101,7 @@ class MenuconfigState extends State<Menuconfig> {
                       children: [
                         GestureDetector(
                           onDoubleTap: () {
-                            if (socketProvider.isConnected) {
-                              Navigator.pop(context);
-                            }
+                            Navigator.pop(context);
                           },
                           child: Image.asset(
                             'assets/Usuarios3.ico',
@@ -138,8 +138,10 @@ class MenuconfigState extends State<Menuconfig> {
                             ),
                             onSubmitted: (value) async {
                               if (value.trim().isNotEmpty) {
+                                socketProvider.disconnect();
+                                await socketProvider.cleanIp();
                                 await saveIp(value.trim());
-                                socketProvider.connect(context);
+                                //socketProvider.connect(context);
                               } else {
                                 print("❌ IP vacía, no se guardó.");
                               }

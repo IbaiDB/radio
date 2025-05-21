@@ -30,7 +30,6 @@ import 'views/loginView.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Captura errores sin manejar en zonas asíncronas
   FlutterError.onError = (FlutterErrorDetails details) {
     print("🚨 ERROR CAPTURADO POR FlutterError.onError: ${details.exception}");
   };
@@ -59,6 +58,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/MainScreen',
       routes: {
         '/MainScreen': (context) => MainScreen(),
+        '/LoginView': (context) => LoginView(navigatorKey: navigatorKey)
       },
     );
   }
@@ -81,7 +81,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _socketProvider = Provider.of<SocketProvider>(context, listen: false);
-    _socketProvider.connect(context);
+    //_socketProvider.connect(context);
     _socketProvider.onShowReconnectDialog = () {
       if (getCurrentRoute() != "/LoginView") {
         showDialog(
@@ -141,7 +141,8 @@ class _MainScreenState extends State<MainScreen> {
       _navigateToReview();
     } else if (message.contains("|P2|MF|")) {
       _navigateToP2view();
-    } else if (message.contains("Introduzca su nombre de usuario y clave")) {
+    } else if (message.contains("Introduzca su nombre de usuario y clave") ||
+        message.contains('Se ha perdido la conexión con el host.')) {
       _navigateToLogin();
     } else if (message.contains("|PR|DI|") &&
         !message.contains("|CC|") &&
@@ -394,12 +395,11 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    final navi = navigatorKey;
+    return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: CircularProgressIndicator(
-          color: Colors.blue,
-        ),
+        child: LoginView(navigatorKey: navi),
       ),
     );
   }

@@ -132,12 +132,14 @@ class LoginViewState extends State<LoginView> {
 
   void _login() {
     final socketProvider = context.read<SocketProvider>();
-
+    socketProvider.connect(context);
     //socketProvider.cleanIp();
     socketProvider.sendMessage(_userController.text);
     socketProvider.sendMessage(_passController.text);
     focusear(_userFocusNode);
-    setState(() => bloqueoTextFields = true);
+    if (socketProvider.isConnected) {
+      setState(() => bloqueoTextFields = true);
+    }
   }
 
   @override
