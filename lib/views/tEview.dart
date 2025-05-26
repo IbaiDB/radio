@@ -581,22 +581,6 @@ class TeviewState extends State<Teview> {
                                   style: TextStyle(fontSize: 16),
                                   onSubmitted: (value) {
                                     filtrarTextField();
-                                    if (value != "") {
-                                      t3 = "";
-                                      l9 = "";
-                                      t9!.clear();
-                                      t0 = "";
-                                      l4 = "";
-                                      t4!.clear();
-                                      t5 = "";
-                                      l6 = "";
-                                      t6!.clear();
-                                      l7 = "";
-                                      t7!.clear();
-                                      l8 = "";
-                                      t8!.clear();
-                                      
-                                    }
                                   },
                                 ),
                               ),
