@@ -12,6 +12,7 @@ class SocketProvider with ChangeNotifier {
   StringBuffer _buffer = StringBuffer();
   Timer? _timer;
   int _retryDelay = 1;
+  int intentosconex = 0;
 
   String get lastMessage => _lastMessage;
   bool get isConnected => _isConnected;
@@ -29,7 +30,7 @@ class SocketProvider with ChangeNotifier {
 
   Future<String?> getIp() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('server_ip');  
+    return prefs.getString('server_ip');
   }
 
   Future<void> cleanIp() async {
@@ -52,27 +53,64 @@ class SocketProvider with ChangeNotifier {
 
     try {
       print('🌐 Intentando conectar al servidor...');
-      _socket =
-          await Socket.connect(ip, 7212).timeout(const Duration(seconds: 5));
+      Socket.connect(ip, 7212)
+          .timeout(const Duration(seconds: 5))
+          .then((socket) {
+        _socket = socket;
+        _isConnected = true;
+        _retryDelay = 1;
+        print('✅ Conectado al servidor');
+
+        // Aquí va el try-catch del listen
+      }).catchError((e, st) {
+        // print("💥 Error al conectar: $e\n$st");
+        // _handleDisconnection(context, true);
+      });
 
       _isConnected = true;
       _retryDelay = 1;
       print('✅ Conectado al servidor');
 
-      _socket!.listen(
-        (List<int> event) {
-          _handleData(event);
-        },
-        onError: (error) {
-          print("❌ Error en el socket: $error");
-          _handleDisconnection(context, true);
-        },
-        onDone: () {
-          print("⚠️ Conexión cerrada por el servidor.");
-          _handleDisconnection(context, false);
-        },
-        cancelOnError: true,
-      );
+      try {
+        final socket =
+            await Socket.connect(ip, 7212).timeout(const Duration(seconds: 5));
+        _socket = socket;
+        _isConnected = true;
+        _retryDelay = 1;
+        print('✅ Conectado al servidor');
+        intentosconex = 0;
+
+        // Solo si socket no es null, crea el listener
+        if (_socket != null) {
+          try {
+            _socket!.listen(
+              (List<int> event) {
+                try {
+                  _handleData(event);
+                } catch (e, st) {
+                  print("❌ Error interno procesando datos: $e\n$st");
+                }
+              },
+              onError: (error, [stackTrace]) {
+                print("❌ Error en el socket (onError): $error\n$stackTrace");
+                _handleDisconnection(context, true);
+              },
+              onDone: () {
+                print("⚠️ Conexión cerrada por el servidor.");
+                _handleDisconnection(context, false);
+              },
+            );
+          } catch (e, st) {
+            print(
+                "🔥 Excepción grave al establecer el listener del socket: $e\n$st");
+            _handleDisconnection(context, true);
+          }
+        }
+      } catch (e, st) {
+        print(
+            "🔥 Excepción grave al establecer el listener del socket: $e\n$st");
+        _handleDisconnection(context, true);
+      }
     } on SocketException catch (e) {
       if (e.message.contains('No route to host')) {
         if (context.mounted) {
@@ -129,8 +167,11 @@ class SocketProvider with ChangeNotifier {
     disconnect();
 
     final ip = await getIp();
-    if (dialog && ip != null && !isInMenuConfig) onShowReconnectDialog?.call();
-    print("🕒 Esperando $_retryDelay segundos antes de reconectar...");
+    if (dialog && ip != null && !isInMenuConfig && intentosconex <= 10) {
+      onShowReconnectDialog?.call();
+      print("🕒 Esperando $_retryDelay segundos antes de reconectar...");
+      intentosconex++;
+    }
 
     Timer(Duration(seconds: _retryDelay), () {
       connect(context);

@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:developer';
+import 'dart:isolate';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:radio/dialogProvider.dart';
 import 'package:radio/views/cCview.dart';
 import 'package:radio/views/f0view.dart';
 import 'package:radio/views/inView.dart';
+import 'package:radio/views/internet.dart';
 import 'package:radio/views/p2View.dart';
 import 'package:radio/views/pIview.dart';
 import 'package:radio/views/prView.dart';
@@ -33,6 +37,13 @@ void main() {
   FlutterError.onError = (FlutterErrorDetails details) {
     print("🚨 ERROR CAPTURADO POR FlutterError.onError: ${details.exception}");
   };
+
+  Isolate.current.addErrorListener(RawReceivePort((dynamic pair) {
+    final List<dynamic> errorAndStacktrace = pair;
+    final error = errorAndStacktrace.first;
+    final stack = errorAndStacktrace.last;
+    log("🛑 Error atrapado por Isolate: $error\n$stack");
+  }).sendPort);
 
   runZonedGuarded(() {
     runApp(
@@ -76,12 +87,27 @@ class _MainScreenState extends State<MainScreen> {
   String error = '';
   bool isPrViewOpen = false;
   String? lastRoute = "";
+  NetworkMonitor networkMonitor = NetworkMonitor();
+  late StreamSubscription<ConnectivityResult> _subscription;
 
   @override
   void initState() {
     super.initState();
     _socketProvider = Provider.of<SocketProvider>(context, listen: false);
     //_socketProvider.connect(context);
+    networkMonitor = NetworkMonitor();
+    _subscription = networkMonitor.connectivityStream.listen((result) {
+      if (result == ConnectivityResult.none) {
+        print("⚠️ No hay conexión a Internet");
+        _socketProvider.disconnect();
+        
+      } else {
+        if (!_socketProvider.isConnected) {
+          _socketProvider.connect(context);
+        }
+      }
+    });
+
     _socketProvider.onShowReconnectDialog = () {
       if (getCurrentRoute() != "/LoginView") {
         showDialog(

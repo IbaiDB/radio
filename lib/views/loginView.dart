@@ -83,6 +83,9 @@ class LoginViewState extends State<LoginView> {
         if (message.contains("|XX|CT|l0|Bienvenido|")) {
           setState(() {
             cargando = 'Bienvenido';
+            Future.delayed(Duration(seconds: 10), () {
+              cargando = '';
+            });
           });
         }
       }
@@ -138,7 +141,10 @@ class LoginViewState extends State<LoginView> {
     socketProvider.sendMessage(_passController.text);
     focusear(_userFocusNode);
     if (socketProvider.isConnected) {
-      setState(() => bloqueoTextFields = true);
+      setState(() {
+        bloqueoTextFields = true;
+        cargando = '';
+      });
     }
   }
 
