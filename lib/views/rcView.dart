@@ -148,6 +148,11 @@ class RcviewState extends State<Rcview> {
           enviart6 = false;
           enviart7 = false;
           enviart2 = true;
+          t3 = "";
+          l7 = "";
+          if (t6 != null) {
+            t6!.clear();
+          }
         }
         dividirLabels(socketProvider.lastMessage.split('\n'));
       }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +28,10 @@ class LoginViewState extends State<LoginView> {
   bool userTeclado = false;
   bool passTeclado = false;
   bool mostrarControles = false;
+  bool conectando = false;
   String cargando = '';
+  double barracarga = 0;
+  Timer? timer;
 
   @override
   void initState() {
@@ -48,9 +53,13 @@ class LoginViewState extends State<LoginView> {
   void _socketListener() {
     final socketProvider = context.read<SocketProvider>();
     final message = socketProvider.lastMessage;
-    final isDialogOpen = context.read<DialogProvider>().isDialogOpen;
+    bool isDialogOpen = context.read<DialogProvider>().isDialogOpen;
     if (isDialogOpen) {
       print("🛑 Hay un diálogo abierto en MainScreen");
+      setState(() {
+        conectando = false;
+        isDialogOpen = false;
+      });
     } else {
       print("✅ No hay diálogos abiertos");
       if (message.contains("Login failed")) {
@@ -72,24 +81,55 @@ class LoginViewState extends State<LoginView> {
             bloqueoTextFields = false;
             userTeclado = true;
             passTeclado = false;
+            conectando = false;
           });
         }
         if (message.contains("Authentication is in progress...") &&
             !message.contains("|XX|CT|l0|Bienvenido|")) {
+          iniciarTemporizador();
           setState(() {
             cargando = 'Conectando...';
+            conectando = true;
           });
         }
         if (message.contains("|XX|CT|l0|Bienvenido|")) {
           setState(() {
             cargando = 'Bienvenido';
-            Future.delayed(Duration(seconds: 10), () {
+            conectando = false;
+            barracarga = 0;
+          });
+          Future.delayed(Duration(seconds: 10), () {
+            if (!mounted) return;
+            setState(() {
               cargando = '';
             });
           });
         }
       }
     }
+  }
+
+  void iniciarTemporizador() {
+    final socketProvider = context.read<SocketProvider>();
+    final message = socketProvider.lastMessage;
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        barracarga = barracarga + 0.1;
+      });
+      if (conectando && barracarga >= 1) {
+        timer.cancel();
+        setState(() {
+          conectando = false;
+          barracarga = 0;
+          if (message.contains("|XX|CT|l0|Bienvenido|")) {
+            bloqueoTextFields = false;
+          }
+        });
+        //socketProvider.disconnect();
+        socketProvider.connect(context);
+      }
+    });
   }
 
   void focusear(FocusNode f) {
@@ -103,47 +143,57 @@ class LoginViewState extends State<LoginView> {
     });
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("¡Atención!"),
-          content: Text(message),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  bloqueoTextFields = false;
-                });
+  // void _showErrorDialog(String message) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: Text("¡Atención!"),
+  //         content: Text(message),
+  //         actions: [
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //               setState(() {
+  //                 bloqueoTextFields = false;
+  //               });
 
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_userFocusNode.canRequestFocus) {
-                    _userFocusNode.requestFocus();
-                  }
-                });
-              },
-              child: Text("Aceptar"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //               WidgetsBinding.instance.addPostFrameCallback((_) {
+  //                 if (_userFocusNode.canRequestFocus) {
+  //                   _userFocusNode.requestFocus();
+  //                 }
+  //               });
+  //             },
+  //             child: Text("Aceptar"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void _login() {
     final socketProvider = context.read<SocketProvider>();
     socketProvider.connect(context);
     //socketProvider.cleanIp();
-    socketProvider.sendMessage(_userController.text);
-    socketProvider.sendMessage(_passController.text);
+    //iniciarTemporizador();
+    setState(() {
+      conectando = true;
+    });
+
     focusear(_userFocusNode);
     if (socketProvider.isConnected) {
+      iniciarTemporizador();
+      socketProvider.sendMessage(_userController.text);
+      socketProvider.sendMessage(_passController.text);
       setState(() {
         bloqueoTextFields = true;
         cargando = '';
+      });
+    } else {
+      setState(() {
+        conectando = false;
       });
     }
   }
@@ -154,6 +204,7 @@ class LoginViewState extends State<LoginView> {
     _passController.dispose();
     socketProvider.removeListener(_socketListener);
     dialog.removeListener(_socketListener);
+    timer?.cancel();
     super.dispose();
   }
 
@@ -267,6 +318,9 @@ class LoginViewState extends State<LoginView> {
                               ),
                           ],
                         ),
+                        SizedBox(
+                          height: 125,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -280,6 +334,7 @@ class LoginViewState extends State<LoginView> {
                             ),
                           ],
                         ),
+                        SizedBox(height: 10),
                         if (!mostrarControles)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -360,6 +415,14 @@ class LoginViewState extends State<LoginView> {
                                 ),
                               ),
                             ],
+                          ),
+                        SizedBox(height: 20),
+                        if (conectando)
+                          LinearProgressIndicator(
+                            value: barracarga,
+                            backgroundColor: Colors.grey[300],
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.blue),
                           ),
                         SizedBox(height: 20),
                       ],

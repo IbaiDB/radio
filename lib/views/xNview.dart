@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:radio/socketService.dart';
+import 'package:radio/views/teclado.dart';
 
 class Xnview extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
@@ -165,8 +166,17 @@ class XnviewState extends State<Xnview> {
 
   void dividirLabels(List<String> lines) {
     print("🔍 Procesando líneas:");
-    for (String line in lines) {
-      line = line.trim().replaceAll(RegExp(r'[^\x20-\x7E|]'), '');
+    int i = 0;
+
+    while (i < lines.length) {
+      String line = lines[i].trim().replaceAll(RegExp(r'[^\x20-\x7E|]'), '');
+
+      // Mientras la línea no tenga un '|' al final, une más líneas
+      while (!line.endsWith('|') && i + 1 < lines.length) {
+        i++;
+        line += '\n' + lines[i].trim();
+      }
+
       List<String> parts = line.split('|');
       String lastPart = parts.reversed
           .firstWhere((part) => part.isNotEmpty, orElse: () => "Error")
@@ -214,10 +224,8 @@ class XnviewState extends State<Xnview> {
         setState(() => t9?.text = lastPart);
       if (line.contains("lA") && !line.contains("|lA||"))
         setState(() => lA = lastPart);
-      //if (line.contains("l+")) setState(() => lMas = lastPart);
 
-      ///////////////////////////////////AHORA FILTRO PARA LIMPIAR LOS TEXTOS////////////////////////////////////////////
-
+      // Limpieza: si está en formato vacío "|t0||" entonces borra
       if (line.contains("|l0||")) setState(() => l0 = "");
       if (line.contains("|l1||")) setState(() => l1 = "");
       if (line.contains("|l2||")) setState(() => l2 = "");
@@ -239,6 +247,8 @@ class XnviewState extends State<Xnview> {
       if (line.contains("|t8||")) setState(() => t8?.text = "");
       if (line.contains("|t9||")) setState(() => t9?.text = "");
       if (line.contains("|lA||")) setState(() => lA = "");
+
+      i++; // Avanza a la siguiente línea
     }
   }
 
@@ -279,6 +289,42 @@ class XnviewState extends State<Xnview> {
       } else {
         focusear(_focusNodet3);
       }
+    }
+  }
+
+  Future lanzarteclado() async {
+    String? txt;
+    if (enviart5) {
+      txt = t5?.text;
+    } else if (enviart8) {
+      txt = t8?.text;
+    } else if (enviart9) {
+      txt = t9?.text;
+    } else if (enviart2) {
+      txt = t2?.text;
+    }
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => KeyboardScreenView(
+                txt: txt,
+              )),
+    );
+    if (resultado != null) {
+      setState(() {
+        if (enviart5) {
+          t5?.text = resultado;
+        } else if (enviart8) {
+          t8?.text = resultado;
+        } else if (enviart9) {
+          t9?.text = resultado;
+        } else if (enviart2) {
+          t2?.text = resultado;
+        }
+        socketProvider.sendMessage(resultado);
+      });
+    } else {
+      return '';
     }
   }
 
@@ -331,33 +377,41 @@ class XnviewState extends State<Xnview> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         //mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.grey, // Fondo gris
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.all(
-                                  Radius.circular(5)), // Borde negro
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 2, vertical: 1),
-                            alignment: Alignment
-                                .center, // Opcional: añade padding interno
-                            child: Text(
-                              l2 ?? "",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black, // Color del texto negro
+                          GestureDetector(
+                            onTap: () {
+                              lanzarteclado();
+                            },
+                            child: Container(
+                              width: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.grey, // Fondo gris
+                                border: Border.all(color: Colors.black),
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(5)), // Borde negro
                               ),
-                              textAlign: TextAlign.center,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 2, vertical: 1),
+                              alignment: Alignment
+                                  .center, // Opcional: añade padding interno
+                              child: Text(
+                                l2 ?? "",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black, // Color del texto negro
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
+
                           // Sin padding extra
                           SizedBox(
                             width: 150,
                             height: 30,
                             child: GestureDetector(
-                              onTap: () {},
+                              onTap: () {
+                                () => ();
+                              },
                               child: AbsorbPointer(
                                 child: TextField(
                                   focusNode: _focusNodet2,
@@ -666,16 +720,24 @@ class XnviewState extends State<Xnview> {
                     ),
                     Container(
                       width: double.infinity, // Ocupa todo el ancho
+                      height: 60,
                       padding: EdgeInsets.symmetric(vertical: 5),
                       color: Colors.blue[900], // Espaciado interior
-                      child: Text(
-                        t1 ?? "",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18, // Tamaño del texto
-                          fontWeight: FontWeight.bold, // Estilo en negrita
+                      child: Scrollbar(
+                        thumbVisibility:
+                            true, // Muestra la barra siempre que sea necesario
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: Text(
+                            t1 ?? "",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                        textAlign: TextAlign.center, // Centra el texto
                       ),
                     ),
                   ],

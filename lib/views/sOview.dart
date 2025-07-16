@@ -16,6 +16,8 @@ class S0View extends StatefulWidget {
   State<S0View> createState() => S0ViewState();
 }
 
+List<GlobalKey> itemKeys = [];
+
 class S0ViewState extends State<S0View> {
   String? l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, lA, t0, t1, t5, tA;
 
@@ -31,6 +33,7 @@ class S0ViewState extends State<S0View> {
   FocusNode focu = FocusNode();
   String? enviar;
   bool dobleBack = true;
+  bool noenviando = true;
   late SocketProvider socketProvider;
   late ScrollController _scrollController;
 
@@ -108,6 +111,7 @@ class S0ViewState extends State<S0View> {
         setState(() {
           opciones?.add(optBuena);
           optSeleccionada = 0;
+          itemKeys = List.generate(opciones!.length, (_) => GlobalKey());
         });
       }
     }
@@ -122,12 +126,20 @@ class S0ViewState extends State<S0View> {
   }
 
   void scrollToSelectedItem() {
-    final itemHeight = 60.0; // Ajusta según el alto real de tus ítems
-    _scrollController.animateTo(
-      optSeleccionada * itemHeight,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (optSeleccionada >= 0 &&
+        itemKeys.isNotEmpty &&
+        optSeleccionada < itemKeys.length) {
+      final key = itemKeys[optSeleccionada];
+      final context = key.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: Duration(milliseconds: 300),
+          alignment: 0.5,
+          curve: Curves.easeInOut,
+        );
+      }
+    }
   }
 
   @override
@@ -237,7 +249,10 @@ class S0ViewState extends State<S0View> {
                                   const EdgeInsets.symmetric(vertical: 0.0),
                               child: GestureDetector(
                                 onDoubleTap: () {
-                                  filtrarOPT();
+                                  if (noenviando) {
+                                    noenviando = false;
+                                    filtrarOPT();
+                                  }
                                 },
                                 onTap: () {
                                   setState(() {
@@ -246,6 +261,7 @@ class S0ViewState extends State<S0View> {
                                   });
                                 },
                                 child: Container(
+                                  key: itemKeys[index],
                                   padding: EdgeInsets.all(5),
                                   decoration: BoxDecoration(
                                     color: optSeleccionada == index

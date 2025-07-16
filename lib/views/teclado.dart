@@ -56,9 +56,15 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           Container(
             padding: EdgeInsets.all(8),
             alignment: Alignment.center,
-            child: Text(
-              input,
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Text(
+                input,
+                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                overflow:
+                    TextOverflow.visible, // para que el scroll funcione bien
+                softWrap: false,
+              ),
             ),
           ),
           Expanded(
@@ -150,16 +156,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("OK", Colors.green, () {
             Navigator.pop(context, input);
           }, 1, 2),
-          buildButton(
-              "MIN",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isMayus = false;
-                    })
-                  },
-              1,
-              1),
+          buildButton("MIN", Colors.purple, () {
+            setState(() {
+              isMayus = false;
+            });
+          }, 1, 1),
           buildButton(":", Colors.grey, () => onKeyPressed(":"), 1, 1),
           buildButton("_", Colors.grey, () => onKeyPressed("_"), 1, 1),
           buildButton("-", Colors.grey, () => onKeyPressed("-"), 1, 1),
@@ -171,16 +172,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton(".", Colors.grey, () => onKeyPressed("."), 1, 1),
           buildButton(",", Colors.grey, () => onKeyPressed(","), 1, 1),
           buildButton(";", Colors.grey, () => onKeyPressed(";"), 1, 1),
-          buildButton(
-              "->",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isAlpha1 = false;
-                    })
-                  },
-              1,
-              1),
+          buildButton("->", Colors.purple, () {
+            setState(() {
+              isAlpha1 = false;
+            });
+          }, 1, 1),
         ];
       } else {
         return [
@@ -208,16 +204,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("OK", Colors.green, () {
             Navigator.pop(context, input);
           }, 1, 2),
-          buildButton(
-              "MAY",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isMayus = true;
-                    }),
-                  },
-              1,
-              1),
+          buildButton("MAY", Colors.purple, () {
+            setState(() {
+              isMayus = true;
+            });
+          }, 1, 1),
           buildButton(":", Colors.grey, () => onKeyPressed(":"), 1, 1),
           buildButton("_", Colors.grey, () => onKeyPressed("_"), 1, 1),
           buildButton("-", Colors.grey, () => onKeyPressed("-"), 1, 1),
@@ -229,16 +220,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton(".", Colors.grey, () => onKeyPressed("."), 1, 1),
           buildButton(",", Colors.grey, () => onKeyPressed(","), 1, 1),
           buildButton(";", Colors.grey, () => onKeyPressed(";"), 1, 1),
-          buildButton(
-              "->",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isAlpha1 = false;
-                    })
-                  },
-              1,
-              1),
+          buildButton("->", Colors.purple, () {
+            setState(() {
+              isAlpha1 = false;
+            });
+          }, 1, 1),
         ];
       }
     } else {
@@ -268,16 +254,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("OK", Colors.green, () {
             Navigator.pop(context, input);
           }, 1, 2),
-          buildButton(
-              "MIN",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isMayus = false;
-                    }),
-                  },
-              1,
-              1),
+          buildButton("MIN", Colors.purple, () {
+            setState(() {
+              isMayus = false;
+            });
+          }, 1, 1),
           buildButton("[", Colors.grey, () => onKeyPressed("["), 1, 1),
           buildButton("]", Colors.grey, () => onKeyPressed("]"), 1, 1),
           buildButton("(", Colors.grey, () => onKeyPressed("("), 1, 1),
@@ -289,16 +270,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("{", Colors.grey, () => onKeyPressed("{"), 1, 1),
           buildButton("}", Colors.grey, () => onKeyPressed("}"), 1, 1),
           buildButton(")", Colors.grey, () => onKeyPressed(")"), 1, 1),
-          buildButton(
-              "<-",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isAlpha1 = true;
-                    })
-                  },
-              1,
-              1),
+          buildButton("<-", Colors.purple, () {
+            setState(() {
+              isAlpha1 = true;
+            });
+          }, 1, 1),
         ];
       } else {
         //*************************************** ALPHANUM2 Y MINÚSCULA **************************************************
@@ -326,16 +302,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("OK", Colors.green, () {
             Navigator.pop(context, input);
           }, 1, 2),
-          buildButton(
-              "MAY",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isMayus = true;
-                    }),
-                  },
-              1,
-              1),
+          buildButton("MAY", Colors.purple, () {
+            setState(() {
+              isMayus = true;
+            });
+          }, 1, 1),
           buildButton("[", Colors.grey, () => onKeyPressed("["), 1, 1),
           buildButton("]", Colors.grey, () => onKeyPressed("]"), 1, 1),
           buildButton("(", Colors.grey, () => onKeyPressed("("), 1, 1),
@@ -347,16 +318,11 @@ class _KeyboardScreenViewState extends State<KeyboardScreenView> {
           buildButton("{", Colors.grey, () => onKeyPressed("{"), 1, 1),
           buildButton("}", Colors.grey, () => onKeyPressed("}"), 1, 1),
           buildButton(")", Colors.grey, () => onKeyPressed(")"), 1, 1),
-          buildButton(
-              "<-",
-              Colors.purple,
-              () => {
-                    setState(() {
-                      isAlpha1 = true;
-                    })
-                  },
-              1,
-              1),
+          buildButton("<-", Colors.purple, () {
+            setState(() {
+              isAlpha1 = true;
+            });
+          }, 1, 1),
         ];
       }
     }

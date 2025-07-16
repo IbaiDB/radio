@@ -326,10 +326,14 @@ class XcviewState extends State<Xcview> {
           t2?.text = resultado;
         }
       });
-      if (incluir) {
-        socketProvider.sendMessage("+$resultado");
+      if (resultado != "123456") {
+        if (incluir) {
+          socketProvider.sendMessage("+$resultado");
+        } else {
+          socketProvider.sendMessage("-$resultado");
+        }
       } else {
-        socketProvider.sendMessage("-$resultado");
+        socketProvider.sendMessage(resultado);
       }
     } else {
       return '';

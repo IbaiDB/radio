@@ -156,6 +156,25 @@ class TeviewState extends State<Teview> {
           enviart2 = true;
           enviart3 = false;
           enviart5 = false;
+          t3 = "";
+          t0 = "";
+          t5 = "";
+          if (t9 != null) {
+            t9!.clear();
+          }
+
+          if (t4 != null) {
+            t4!.clear();
+          }
+          if (t6 != null) {
+            t6!.clear();
+          }
+          if (t7 != null) {
+            t7!.clear();
+          }
+          if (t8 != null) {
+            t8!.clear();
+          }
         } else if (socketProvider.lastMessage.contains("|TE|DI|t5|")) {
           focusear(_focusNodet5);
           enviart4 = false;

@@ -71,45 +71,40 @@ class SocketProvider with ChangeNotifier {
       _retryDelay = 1;
       print('✅ Conectado al servidor');
 
-      try {
-        final socket =
-            await Socket.connect(ip, 7212).timeout(const Duration(seconds: 5));
-        _socket = socket;
-        _isConnected = true;
-        _retryDelay = 1;
-        print('✅ Conectado al servidor');
-        intentosconex = 0;
+      final socket =
+          await Socket.connect(ip, 7212).timeout(const Duration(seconds: 5));
+      _socket = socket;
+      _isConnected = true;
+      _retryDelay = 1;
+      print('✅ Conectado al servidor');
+      intentosconex = 0;
 
-        // Solo si socket no es null, crea el listener
-        if (_socket != null) {
-          try {
-            _socket!.listen(
-              (List<int> event) {
-                try {
-                  _handleData(event);
-                } catch (e, st) {
-                  print("❌ Error interno procesando datos: $e\n$st");
-                }
-              },
-              onError: (error, [stackTrace]) {
-                print("❌ Error en el socket (onError): $error\n$stackTrace");
-                _handleDisconnection(context, true);
-              },
-              onDone: () {
-                print("⚠️ Conexión cerrada por el servidor.");
-                _handleDisconnection(context, false);
-              },
-            );
-          } catch (e, st) {
-            print(
-                "🔥 Excepción grave al establecer el listener del socket: $e\n$st");
-            _handleDisconnection(context, true);
-          }
+      // Solo si socket no es null, crea el listener
+      if (_socket != null) {
+        try {
+          _socket!.listen(
+            (List<int> event) {
+              try {
+                _handleData(event);
+              } catch (e, st) {
+                print("❌ Error interno procesando datos: $e\n$st");
+              }
+            },
+            onError: (error, [stackTrace]) {
+              print("❌ Error en el socket (onError): $error\n$stackTrace");
+              _handleDisconnection(context, true);
+            },
+            onDone: () {
+              print("⚠️ Conexión cerrada por el servidor.");
+              _handleDisconnection(context, false);
+            },
+            cancelOnError: true,
+          );
+        } catch (e, st) {
+          print(
+              "🔥 Excepción grave al establecer el listener del socket: $e\n$st");
+          _handleDisconnection(context, true);
         }
-      } catch (e, st) {
-        print(
-            "🔥 Excepción grave al establecer el listener del socket: $e\n$st");
-        _handleDisconnection(context, true);
       }
     } on SocketException catch (e) {
       if (e.message.contains('No route to host')) {
